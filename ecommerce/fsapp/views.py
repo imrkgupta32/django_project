@@ -25,6 +25,7 @@
 from django.http import HttpResponse
 from django.shortcuts import render, redirect
 from .models import FieldStaff
+from django.contrib.auth.models import User
 
 def fieldstaff_detail(request, fieldstaff_id):
     fieldstaffs = FieldStaff.objects.filter(id=fieldstaff_id)
@@ -39,8 +40,8 @@ def fieldstaff_detail(request, fieldstaff_id):
             'city': fieldstaff.city,
             'zipcode': fieldstaff.zipcode,
             'experience_years': fieldstaff.experience_years,
-            'dealer': fieldstaff.dealer.name,
-            'company': fieldstaff.company.name,
+            'dealer': fieldstaff.dealer,
+            'company': fieldstaff.company,
         }
         return HttpResponse(response_data, content_type='application/json')
     else:

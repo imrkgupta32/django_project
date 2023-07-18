@@ -122,21 +122,88 @@ from .models import   Product,  Orders, OrderItem
 #     except OrderItem.DoesNotExist:
 #         return HttpResponse('Order Item not found.', status=404)
 
+from math import ceil
+
+
+
+
+# from django.shortcuts import render
+# from .models import Product
+
+# def search_products(request):
+#     if request.method == 'POST':
+#         search_query = request.POST.get('search_query')
+#         products = Product.objects.filter(name__icontains=search_query)
+
+#         context = {
+#             'products': products,
+#             'search_query': search_query,
+#         }
+
+#         return render(request, 'search_results.html', context)
+
+#     # Handle other cases, such as rendering the search form initially
+#     return render(request, 'index.html')
+
+
 
 
 def product_detail(request, product_id):
-    products = Product.objects.filter(id=product_id)
-    
+    products = Product.objects.filter(Product, id=product_id)
+    # print(products)
+    # n= len(products)
+    # nSlides = n//4 + ceil((n/4)-(n//4))
+    # params = { 'no_of_slides':nSlides , 'range': range(nSlides), 'product': products}
+
+
+
     if products.exists():
         product = products.first()
         response_data = {
+            
             'name': product.name,
             'description': product.description,
             'price': product.price,
+            'imgae': product.image,
+            'category': product.category,
+            'sub_category': product.sub_category,
+            'company':product.company,
         }
         return HttpResponse(response_data, content_type='application/json')
     else:
         return HttpResponse('Product not found.', status=404)
+
+
+# from capp.models import Company
+# from django.db.models import Q
+
+# def product_detail(request, product_id):
+#     # Check if a search query is provided in the request
+#     search_query = request.POST.get('search_query')
+#     if search_query:
+#         # Perform a search query using case-insensitive matching on the product name and category
+#         products = Product.objects.filter(Q(name__icontains=search_query) | Q(category__icontains=search_query))
+#     else:
+#         # Retrieve the product by ID if no search query is provided
+#         products = Product.objects.filter(id=product_id)
+
+#     if products.exists():
+#         product = products.first()
+#         response_data = {
+#             'name': product.name,
+#             'description': product.description,
+#             'price': product.price,
+#             'image': product.image.url,
+#             'category': product.category,
+#             'sub_category': product.sub_category,
+#             'company': product.company.company.username,
+#         }
+#         return HttpResponse(response_data, content_type='application/json')
+#     else:
+#         return HttpResponse('Product not found.', status=404)
+
+
+
 
 
 def order_detail(request, order_id):
@@ -145,7 +212,7 @@ def order_detail(request, order_id):
     if orders.exists():
         order = orders.first()
         response_data = {
-            'retailer': order.retailer.name,
+            # 'retailer': order.retailer.name,
             'fieldstaff': order.fieldstaff.name,
             'dealer': order.dealer.name,
             'order_date': order.order_date,
@@ -179,3 +246,6 @@ def OrderManagementSystem(request):
         'title':'OrderManagementSystem'
     }
     return render(request, 'index.html', data)
+
+
+    # return render (request, 'index.html', params)

@@ -38,11 +38,13 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
+    'account',
     'myapp',
     'capp',
     'dapp',
     'fsapp',
     'rapp',
+    
     
     # 'login',
     # 'rest_framework_simplejwt',
@@ -71,6 +73,15 @@ TEMPLATES = [
                 'django.template.context_processors.request',
                 'django.contrib.auth.context_processors.auth',
                 'django.contrib.messages.context_processors.messages',
+                
+                
+                # 'capp.views.company_detail',
+                # 'dapp.views.dealer_detail',
+                # 'fsapp.views.fieldstaff_detail',
+                # 'rapp.views.retailer_detail',
+                # 'myapp.views.product_detail',
+                
+                
             ],
         },
     },
@@ -154,3 +165,4 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
 
 
+# AUTH_USER_MODEL = 'myapp.CustomUserAdmin'

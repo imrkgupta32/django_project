@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Bazar</title>
+    <!-- Add your CSS and JavaScript files here -->
+    <link rel="stylesheet" href="styles.css">
+    <script src="main.js"></script>
+</head>
+<body>
+    <header>
+        <!-- Add your header content here -->
+        <h1>Welcome to Bazar</h1>
+        <nav>
+            <ul>
+                <li><a href="#">Home</a></li>
+                <li><a href="#">Products</a></li>
+                <li><a href="#">About</a></li>
+                <li><a href="#">Contact</a></li>
+            </ul>
+        </nav>
+    </header>
+    
+    <section id="featured-products">
+        <!-- Add your featured products here -->
+        <h2>Featured Products</h2>
+        <div class="product-list">
+            <!-- Display your featured products -->
+            {% for product in featured_products %}
+                <div class="product">
+                    <img src="{{ product.image.url }}" alt="{{ product.name }}">
+                    <h3>{{ product.name }}</h3>
+                    <p>{{ product.description }}</p>
+                    <p>Price: {{ product.price }}</p>
+                </div>
+            {% endfor %}
+        </div>
+    </section>
+    
+    <section id="latest-news">
+        <!-- Add your latest news or blog posts here -->
+        <h2>Latest News</h2>
+        <div class="news-list">
+            <!-- Display your latest news or blog posts -->
+            {% for post in latest_news %}
+                <div class="news-post">
+                    <h3>{{ post.title }}</h3>
+                    <p>{{ post.content }}</p>
+                    <p>Published: {{ post.published_date }}</p>
+                </div>
+            {% endfor %}
+        </div>
+    </section>
+    
+    <footer>
+        <!-- Add your footer content here -->
+        <p>&copy; 2023 My Ecommerce Website. All rights reserved.</p>
+    </footer>
+</body>
+</html>

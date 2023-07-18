@@ -3,13 +3,15 @@
 from django.http import HttpResponse
 from django.shortcuts import render, redirect
 from .models import Company
+# from django.contrib.auth.models import User
 # # def aboutUs(request):
 # #     return HttpResponse("Welcome to the Order Management System")
 
 
 def company_detail(request, company_id):
     try:
-        company = Company.objects.get(id=company_id)
+        company = Company.objects.get(Company, id=company_id)
+        # company = Company.objects.get(Company_id=48)
         response_data = {
             'company': company.company,
             'email_id': company.email_id,

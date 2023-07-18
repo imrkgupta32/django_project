@@ -31,7 +31,7 @@ def dealer_detail(request, dealer_id):
     dealer = get_object_or_404(Dealer, id=dealer_id, company=company)
 
     response_data = {
-        'dealer': dealer.dealer,
+        'dealer': dealer,
         'email_id': dealer.email_id,
         'ph_no': dealer.ph_no,
         'state': dealer.state,

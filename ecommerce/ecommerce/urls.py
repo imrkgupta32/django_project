@@ -39,6 +39,7 @@ urlpatterns = [
     path('order-item-details/',views.order_item_detail),
     path('',views.OrderManagementSystem),
     path('templates', views.Index, name='index'),
+    # path('', include('account.urls')),
     
     # path('',include('capp.urls', namespace = 'capp')),
     # path('',include('dapp.urls', namespace = 'dapp')),
@@ -57,4 +58,4 @@ urlpatterns = [
 
 
 if settings.DEBUG:
-    urlpatterns += static(settings.MEDIA_URL, document_rrot=settings.MEDIA_ROOT)
+    urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
