@@ -81,7 +81,51 @@ class DealerAdmin(admin.ModelAdmin):
             
         return queryset
     list_display = ('id', 'name', 'category', 'sub_category', 'description', 'price', 'image', 'company' )
+    list_filter = ('category', 'sub_category', )
+    search_fields = ('id', 'name', 'category', 'sub_category', 'description', 'price', 'company' )
    
+   
+   
+   
+
+from myapp.models import Category
+from myapp.models import Review
+from myapp.models import Rating
+
+@admin.register(Category)
+class CategoryAdmin(admin.ModelAdmin):
+    # def get_queryset(self, request):
+    #     queryset = super().get_queryset(request)
+    #     if request.user.groups.filter(name='Group_company').exists():
+    #         company = Company.objects.get(company=request.user).company
+    #         queryset = queryset.filter(company=company)
+            
+    #     return queryset    
+    list_display = ('id', 'name')
+    search_fields = ('name',)
+    
+    
+
+# Register the Review model in the admin site
+@admin.register(Review)
+class ReviewAdmin(admin.ModelAdmin):
+    
+    list_display = ('id', 'retailer', 'product', 'created_at')
+    list_filter = ('created_at',)
+    search_fields = ('retailer__username', 'product__name')
+
+
+# Register the Rating model in the admin site
+@admin.register(Rating)
+class RatingAdmin(admin.ModelAdmin):
+    list_display = ('id', 'retailer', 'product', 'rating')
+    list_filter = ('rating',)
+    search_fields = ('retailer__username', 'product__name')
+
+
+
+
+
 
 
 @admin.register(Orders)
@@ -116,6 +160,8 @@ class OrderAdmin(admin.ModelAdmin):
         return queryset
   
     list_display = ('id', 'name', 'retailer', 'fieldstaff', 'dealer', 'order_date', 'total_amount')
+    list_filter = ('order_date',)
+    search_fields = ('id', 'name', 'retailer', 'fieldstaff', 'dealer', 'order_date')
 
 @admin.register(OrderItem)
 class OrderItemAdmin(admin.ModelAdmin):
@@ -143,6 +189,8 @@ class OrderItemAdmin(admin.ModelAdmin):
 
 
     list_display = ('order', 'quantity', 'price')
+    list_filter = ( 'quantity', )
+    search_fields = ('order', 'quantity', 'price')
     
     
     

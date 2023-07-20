@@ -30,7 +30,10 @@ class FieldStaffAdmin(admin.ModelAdmin):
         return queryset
     
     
-    list_display = ('id', 'fieldstaff', 'email_id', 'ph_no', 'state', 'city', 'zipcode', 'experience_years', 'dealer', 'company')
+    list_display = ('id','email_id', 'fieldstaff',  'phone_no', 'experience_years', 'address', 'nationality', 'state', 'city', 'zipcode', 'dealer', 'company')
+    search_fields = ('id','email_id', 'fieldstaff',  'phone_no', 'experience_years', 'address', 'nationality', 'state', 'city', 'zipcode', 'dealer', 'company')
+    list_filter = ('phone_no', 'address', 'state', 'city')
+
 
 
 

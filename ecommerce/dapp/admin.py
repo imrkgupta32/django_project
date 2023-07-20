@@ -12,9 +12,9 @@ class DealerAdmin(admin.ModelAdmin):
             queryset = queryset.filter(company=request.user)
             
         return queryset
-    list_display = ('id', 'dealer', 'email_id', 'ph_no','state', 'city', 'zipcode','experience_years', 'company' )
-    search_fields = ('ph_no',)
-
+    list_display = ('id', 'dealer', 'email_id', 'phone_no', 'experience_years', 'address', 'nationality', 'state', 'city', 'zipcode', 'company')
+    search_fields = ('id', 'dealer', 'email_id', 'phone_no', 'experience_years', 'address', 'nationality', 'state', 'city', 'zipcode', 'company')
+    list_filter = ('email_id', 'phone_no', 'address', 'state', 'city',)
 
         
         
