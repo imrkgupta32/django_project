@@ -62,35 +62,38 @@ admin.site.register(User, CustomUserAdmin)
 from django.contrib import admin
 from django.contrib.auth.admin import UserAdmin
 
-@admin.register(Product)
-class DealerAdmin(admin.ModelAdmin):
-    def get_queryset(self, request):
-        queryset = super().get_queryset(request)
-        if request.user.groups.filter(name='Group_FieldStaff').exists():
-            company = FieldStaff.objects.get(fieldstaff=request.user).company
-            queryset = queryset.filter(company=company)
-            
-        if request.user.groups.filter(name='Group_Dealer').exists():
-            company = Dealer.objects.get(dealer=request.user).company
-            queryset = queryset.filter(company=company)
 
-        if request.user.groups.filter(name='Group_company').exists():
-            company = Company.objects.get(company=request.user).company
-            queryset = queryset.filter(company=company)
-                
-            
-        return queryset
-    list_display = ('id', 'name', 'category', 'sub_category', 'description', 'price', 'image', 'company' )
-    list_filter = ('category', 'sub_category', )
-    search_fields = ('id', 'name', 'category', 'sub_category', 'description', 'price', 'company' )
+
+
+
+
+@admin.register(Product)
+class ProductAdmin(admin.ModelAdmin):
+    
+    def save_model(self, request, obj, form, change):
+        # Update the location_status based on the status if needed
+        if obj.status == 'd':  # If the status is 'Delivered'
+            obj.location_status = 'd'  # Set location_status to 'Delivered'
+        obj.save()
+
+    def get_readonly_fields(self, request, obj=None):
+        # Make the location_status field readonly for certain conditions
+        if obj and obj.status == 'd':
+            return ('location_status',)
+        return super().get_readonly_fields(request, obj)
+
+    def has_delete_permission(self, request, obj=None):
+        # Disable delete action for products with 'Delivered' status
+        if obj and obj.status == 'd':
+            return False
+        return super().has_delete_permission(request, obj)   
    
-   
-   
-   
+    list_display = ('id', 'name',  'description', 'price', 'image')
+    
+    list_filter = ( 'status', 'location_status')
+    search_fields = ( 'name', 'description', 'price' )
 
 from myapp.models import Category
-from myapp.models import Review
-from myapp.models import Rating
 
 @admin.register(Category)
 class CategoryAdmin(admin.ModelAdmin):
@@ -101,10 +104,13 @@ class CategoryAdmin(admin.ModelAdmin):
     #         queryset = queryset.filter(company=company)
             
     #     return queryset    
-    list_display = ('id', 'name')
+    list_display = ('id',  'name')
+    list_filter= ('name', )
     search_fields = ('name',)
     
-    
+
+from .models import Review    
+from .models import Rating    
 
 # Register the Review model in the admin site
 @admin.register(Review)
@@ -159,9 +165,9 @@ class OrderAdmin(admin.ModelAdmin):
 
         return queryset
   
-    list_display = ('id', 'name', 'retailer', 'fieldstaff', 'dealer', 'order_date', 'total_amount')
+    list_display = ('id', 'product', 'retailer', 'fieldstaff', 'dealer', 'order_date', 'price')
     list_filter = ('order_date',)
-    search_fields = ('id', 'name', 'retailer', 'fieldstaff', 'dealer', 'order_date')
+    search_fields = ('id', 'product', 'retailer', 'fieldstaff', 'dealer', 'order_date')
 
 @admin.register(OrderItem)
 class OrderItemAdmin(admin.ModelAdmin):
@@ -188,13 +194,31 @@ class OrderItemAdmin(admin.ModelAdmin):
         return queryset
 
 
-    list_display = ('order', 'quantity', 'price')
+    list_display = ('order', 'quantity', 'total_amount')
     list_filter = ( 'quantity', )
-    search_fields = ('order', 'quantity', 'price')
+    search_fields = ('order', 'quantity', 'total_amount')
     
     
     
     
+from myapp.models import Cart
+from myapp.models import CartItem
+
+admin.site.register(Cart)
+class CartAdmin(admin.ModelAdmin):
+    
+    list_display= ('id', 'product', 'total')
+    list_filter= ('product', )
+    search_fields= ('id', 'product')
+    
+    
+    
+    
+admin.site.register(CartItem)
+class CartItemAdmin(admin.ModelAdmin):
+    list_display= ('id', 'cart', 'product', 'quantity')
+    list_filter= ('product', 'quantity')
+    search_fields= ('id', 'product', 'quantity','cart')
     
     
     

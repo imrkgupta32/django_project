@@ -32,8 +32,8 @@ class RetailerAdmin(admin.ModelAdmin):
             
         return queryset
             
-    list_display = ('id','email_id', 'retailer', 'phone_no', 'experience_years', 'address', 'nationality', 'state', 'city', 'zipcode', 'fieldstaff', 'dealer', 'company')
-    search_fields = ('id','email_id', 'retailer', 'fieldstaff',  'phone_no', 'experience_years', 'address', 'nationality', 'state', 'city', 'zipcode', 'dealer', 'company')
+    list_display = ('id','email_id', 'retailer', 'phone_no','address', 'nationality', 'state', 'city', 'zipcode', 'fieldstaff', 'dealer', 'company')
+    search_fields = ('email_id','phone_no','address', 'nationality', 'state', 'city')
     list_filter = ('phone_no', 'address', 'state', 'city')
 
 

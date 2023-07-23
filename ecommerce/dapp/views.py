@@ -43,3 +43,16 @@ def dealer_detail(request, dealer_id):
 
     return HttpResponse(response_data, content_type='application/json')
 
+
+
+
+def search_feature(request):
+    # Check if the request is a post request.
+    if request.method == 'POST':
+        # Retrieve the search query entered by the user
+        search_query = request.POST['search_query']
+        # Filter your model by the search query
+        dealers = Dealer.objects.filter(dealer__contains=search_query)
+        return render(request, 'dapp/index.html', {'query': search_query, 'dealers': dealers})
+    else:
+        return render(request, 'dapp/index.html', {})

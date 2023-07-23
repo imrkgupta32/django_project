@@ -38,15 +38,14 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
-    'account',
+    'django.contrib.postgres',
+    # 'account',
     'myapp',
     'capp',
     'dapp',
     'fsapp',
     'rapp',
-    
-    
-    # 'login',
+    'login',
     # 'rest_framework_simplejwt',
 ]
 

@@ -9,7 +9,6 @@ class Retailer(models.Model):
     email_id = models.EmailField(max_length=254, blank=True, null=True, unique=True)
     DEFAULT_COUNTRY_CODE = '+977-' 
     phone_no = models.CharField(max_length=15,default=DEFAULT_COUNTRY_CODE, blank=True, null=True)
-    experience_years = models.IntegerField(null=True, blank=True)
     address = models.CharField(max_length=200, blank=True, null=True)
     nationality=models.CharField(max_length=100, blank=True, null=True, default='')
     state = models.CharField(max_length=50, blank=True, null=True)
