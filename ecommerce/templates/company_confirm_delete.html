@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Delete Company</title>
+</head>
+<body>
+    <h1>Delete Company</h1>
+    <p>Are you sure you want to delete the following company?</p>
+    <ul>
+        <li><strong>ID:</strong> {{ company.id }}</li>
+        <li><strong>Company:</strong> {{ company.company }}</li>
+        <li><strong>Email:</strong> {{ company.email_id }}</li>
+        <li><strong>Phone Number:</strong> {{ company.phone_no }}</li>
+        <li><strong>Address:</strong> {{ company.address }}</li>
+        <li><strong>Nationality:</strong> {{ company.nationality }}</li>
+        <li><strong>State:</strong> {{ company.state }}</li>
+        <li><strong>City:</strong> {{ company.city }}</li>
+        <li><strong>Zip Code:</strong> {{ company.zipcode }}</li>
+    </ul>
+    <form method="post">
+        {% csrf_token %}
+        <input type="submit" value="Delete">
+    </form>
+    <br>
+    <a href="{% url 'company_list' %}">Cancel and go back to Company List</a>
+</body>
+</html>

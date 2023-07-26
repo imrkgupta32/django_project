@@ -249,3 +249,70 @@ def OrderManagementSystem(request):
 
 
     # return render (request, 'index.html', params)
+
+
+
+
+
+from django.shortcuts import render, redirect
+from django.contrib import messages
+from .models import Product, Orders, OrderItem
+
+def place_order(request):
+    if request.method == 'POST':
+        # Get user from the request (assuming user is authenticated)
+        user = request.user
+
+        # Get products from the user's cart (you need to implement cart functionality)
+        # For simplicity, we'll assume cart_items is a list of dictionaries containing product_id and quantity.
+        cart_items = request.session.get('cart_items', [])
+
+        # Create a new order for the user
+        order = Orders.objects.create(user=user)
+
+        # Calculate the total price of the order and add order items
+        total_price = 0
+        for item in cart_items:
+            product = Product.objects.get(pk=item['product_id'])
+            quantity = item['quantity']
+            item_total = product.price * quantity
+            total_price += item_total
+            OrderItem.objects.create(order=order, product=product, quantity=quantity, item_total=item_total)
+
+        order.total_price = total_price
+        order.save()
+
+        # Clear the user's cart after the order is placed
+        request.session['cart_items'] = []
+
+        # Trigger a notification for the user (you can implement notification logic)
+        messages.success(request, 'Your order has been placed successfully!')
+
+        return redirect('order_confirmation')  # Redirect to the order confirmation page
+
+    # Render the order placement page
+    products = Product.objects.all()
+    return render(request, 'place_order.html', {'products': products})
+
+def order_confirmation(request):
+    # Fetch the last order placed by the user
+    user = request.user
+    order = Orders.objects.filter(user=user).order_by('-order_date').first()
+
+    # Display the order confirmation page with order details
+    return render(request, 'order_confirmation.html', {'order': order})
+
+
+
+
+# views.py
+from django.shortcuts import render
+from myapp.signals import order_placed
+
+def place_order(request):
+    # Your order placement logic here...
+
+    # Emit the order_placed signal when an order is placed
+    order_placed.send(sender=None, order=Orders, user=request.user)
+
+    # Return response to the user

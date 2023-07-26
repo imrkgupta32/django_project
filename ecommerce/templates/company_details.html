@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Company Detail</title>
+</head>
+<body>
+    <h1>Company Detail</h1>
+    <p><strong>Company ID:</strong> {{ company.id }}</p>
+    <p><strong>Company Name:</strong> {{ company.company }}</p>
+    <p><strong>Email:</strong> {{ company.email_id }}</p>
+    <p><strong>Phone Number:</strong> {{ company.phone_no }}</p>
+    <p><strong>Address:</strong> {{ company.address }}</p>
+    <p><strong>Nationality:</strong> {{ company.nationality }}</p>
+    <p><strong>State:</strong> {{ company.state }}</p>
+    <p><strong>City:</strong> {{ company.city }}</p>
+    <p><strong>Zipcode:</strong> {{ company.zipcode }}</p>
+
+    <!-- Add any additional fields you want to display here -->
+
+    <!-- Add a link to edit the company information -->
+    <a href="{% url 'company_update' company.id %}">Edit</a>
+
+    <!-- Add a link to delete the company -->
+    <form action="{% url 'company_delete' company.id %}" method="post">
+        {% csrf_token %}
+        <input type="submit" value="Delete">
+    </form>
+
+    <!-- Add a link to go back to the company list -->
+    <a href="{% url 'company_list' %}">Back to Company List</a>
+</body>
+</html>

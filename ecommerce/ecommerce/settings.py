@@ -39,13 +39,15 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
     'django.contrib.postgres',
-    # 'account',
+    'account',
     'myapp',
     'capp',
     'dapp',
     'fsapp',
     'rapp',
     'login',
+    'channels',
+    'phonenumber_field',
     # 'rest_framework_simplejwt',
 ]
 
@@ -87,7 +89,7 @@ TEMPLATES = [
 ]
 
 WSGI_APPLICATION = 'ecommerce.wsgi.application'
-
+ASGI_APPLICATION = 'ecommerce.routing.application'
 
 # Database
 # https://docs.djangoproject.com/en/4.2/ref/settings/#databases

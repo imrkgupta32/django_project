@@ -12,6 +12,7 @@ from django.contrib.auth.admin import UserAdmin
 from django.contrib import admin
 from django.db.models import Q
 from itertools import chain
+
 class CustomUserAdmin(UserAdmin):
     def get_queryset(self, request):
         
@@ -70,6 +71,27 @@ from django.contrib.auth.admin import UserAdmin
 @admin.register(Product)
 class ProductAdmin(admin.ModelAdmin):
     
+    
+    
+    def get_queryset(self, request):
+        queryset = super().get_queryset(request)
+        if request.user.groups.filter(name='Group_FieldStaff').exists():
+            company = FieldStaff.objects.get(fieldstaff=request.user).company
+            queryset = queryset.filter(company=company)
+            
+        if request.user.groups.filter(name='Group_Dealer').exists():
+            company = Dealer.objects.get(dealer=request.user).company
+            queryset = queryset.filter(company=company)
+
+        if request.user.groups.filter(name='Group_company').exists():
+            company = Company.objects.get(company=request.user).company
+            queryset = queryset.filter(company=company)
+                
+            
+        return queryset
+    
+    
+    
     def save_model(self, request, obj, form, change):
         # Update the location_status based on the status if needed
         if obj.status == 'd':  # If the status is 'Delivered'
@@ -116,7 +138,8 @@ from .models import Rating
 @admin.register(Review)
 class ReviewAdmin(admin.ModelAdmin):
     
-    list_display = ('id', 'retailer', 'product', 'created_at')
+    list_display = ('id', 'retailer', 'product', 'created_at' , 'text')
+    exclude=('retailer',)
     list_filter = ('created_at',)
     search_fields = ('retailer__username', 'product__name')
 
@@ -125,11 +148,9 @@ class ReviewAdmin(admin.ModelAdmin):
 @admin.register(Rating)
 class RatingAdmin(admin.ModelAdmin):
     list_display = ('id', 'retailer', 'product', 'rating')
+    exclude=('retailer',)
     list_filter = ('rating',)
     search_fields = ('retailer__username', 'product__name')
-
-
-
 
 
 
@@ -164,10 +185,12 @@ class OrderAdmin(admin.ModelAdmin):
             queryset = queryset.filter(dealer__company=company)
 
         return queryset
-  
-    list_display = ('id', 'product', 'retailer', 'fieldstaff', 'dealer', 'order_date', 'price')
+    
+
+    list_display = ('id', 'product', 'retailer', 'fieldstaff', 'dealer', 'order_date', 'status','price')
+    exclude=('retailer',)
     list_filter = ('order_date',)
-    search_fields = ('id', 'product', 'retailer', 'fieldstaff', 'dealer', 'order_date')
+    # search_fields = ( 'product', 'retailer', 'fieldstaff', 'dealer', 'order_date')
 
 @admin.register(OrderItem)
 class OrderItemAdmin(admin.ModelAdmin):
@@ -194,9 +217,9 @@ class OrderItemAdmin(admin.ModelAdmin):
         return queryset
 
 
-    list_display = ('order', 'quantity', 'total_amount')
+    list_display = ('order', 'quantity','product', 'total_amount' )
     list_filter = ( 'quantity', )
-    search_fields = ('order', 'quantity', 'total_amount')
+    # search_fields = ('quantity', )
     
     
     
@@ -224,8 +247,40 @@ class CartItemAdmin(admin.ModelAdmin):
     
     
     
+from .models import Notification
+
+class NotificationAdmin(admin.ModelAdmin):
+    list_display = ('user', 'message', 'timestamp', 'is_read')
+    list_filter = ('is_read',)
+    search_fields = ( 'message',)  # Allows searching by username of the related user
+
+    def get_queryset(self, request):
+        qs = super().get_queryset(request)
+        # Restrict the queryset to show notifications of the current logged-in user
+        if not request.user.is_superuser:
+            qs = qs.filter(user=request.user)
+        return qs
+
+admin.site.register(Notification, NotificationAdmin)    
     
-    
+
+from .models import LoyaltyPoints
+
+@admin.register(LoyaltyPoints)
+class LoyaltyPointsAdmin(admin.ModelAdmin):
+    list_display = ('order', 'retailer', 'points_gained')
+    list_filter = ('retailer',)
+    search_fields = ('order__product__name', 'retailer__username')
+
+    def save_model(self, request, obj, form, change):
+        # Calculate and set the loyalty points before saving the model
+        obj.points_gained = obj.collect_points()
+        super().save_model(request, obj, form, change)
+
+
+
+
+
     
     
 # from django.contrib import admin

@@ -1,43 +1,74 @@
 
-# # Create your views here.
-from django.http import HttpResponse
-from django.shortcuts import render, redirect
+from django.shortcuts import render, redirect, get_object_or_404
+from django.db.models import Q
 from .models import Company
-# from django.contrib.auth.models import User
-# # def aboutUs(request):
-# #     return HttpResponse("Welcome to the Order Management System")
+from .forms import CompanyForm
+
+def company_list(request):
+    # Check if the request is a GET request
+    if request.method == 'GET':
+        # Get the search query from the request's GET parameters
+        search_query = request.GET.get('q', '')
+
+        # Filter companies based on the search query using Q objects
+        companies = Company.objects.filter(
+            Q(company__username__icontains=search_query) |  # Search by company username
+            Q(email_id__icontains=search_query) |          # Search by email_id
+            Q(phone_no__icontains=search_query) |         # Search by phone_no
+            Q(address__icontains=search_query) |          # Search by address
+            Q(nationality__icontains=search_query) |      # Search by nationality
+            Q(state__icontains=search_query) |            # Search by state
+            Q(city__icontains=search_query) |             # Search by city
+            Q(zipcode__icontains=search_query)            # Search by zipcode
+        )
+
+        return render(request, 'company_list.html', {'companies': companies, 'search_query': search_query})
+
+    return render(request, 'company_list.html')
 
 
-def company_detail(request, company_id):
-    try:
-        company = Company.objects.get(Company, id=company_id)
-        # company = Company.objects.get(Company_id=48)
-        response_data = {
-            'company': company.company,
-            'email_id': company.email_id,
-            'ph_no': company.ph_no,
-            'state': company.state,
-            'city': company.city,
-            'zipcode:':company.zipcode,
-            
-        }
-        return HttpResponse(response_data, content_type='application/json')
-    except Company.DoesNotExist:
-        return HttpResponse('Company not found.', status=404)
 
+def company_detail(request, pk):
+    # Retrieve a specific Company object using the primary key (pk)
+    company = get_object_or_404(Company, pk=pk)
 
+    return render(request, 'company_detail.html', {'company': company})
 
-
-def search_feature(request):
-    # Check if the request is a post request.
+def company_create(request):
     if request.method == 'POST':
-        # Retrieve the search query entered by the user
-        search_query = request.POST['search_query']
-        # Filter your model by the search query
-        companies = Company.objects.filter(company__contains=search_query)
-        return render(request, 'capp/index.html', {'query': search_query, 'companies': companies})
+        form = CompanyForm(request.POST)
+        if form.is_valid():
+            form.save()
+            return redirect('company_list')
     else:
-        return render(request, 'capp/index.html', {})
+        form = CompanyForm()
+
+    return render(request, 'company_form.html', {'form': form})
+
+def company_update(request, pk):
+    company = get_object_or_404(Company, pk=pk)
+    if request.method == 'POST':
+        form = CompanyForm(request.POST, instance=company)
+        if form.is_valid():
+            form.save()
+            return redirect('company_list')
+    else:
+        form = CompanyForm(instance=company)
+
+    return render(request, 'company_form.html', {'form': form})
+
+def company_delete(request, pk):
+    company = get_object_or_404(Company, pk=pk)
+    if request.method == 'POST':
+        company.delete()
+        return redirect('company_list')
+
+    return render(request, 'company_confirm_delete.html', {'company': company})
+
+
+
+
+
 
 
 

@@ -1,21 +1,23 @@
-
+from phonenumber_field.modelfields import PhoneNumberField
 from django.db import models
 from dapp.models import Dealer
 from capp.models import Company
 from django.contrib.auth.models import User
+from django.db.models.signals import pre_save
+from django.dispatch import receiver
+
 class FieldStaff(models.Model):
     fieldstaff = models.ForeignKey(User, on_delete=models.PROTECT, blank=True, null=True)
     email_id = models.EmailField(max_length=254, blank=True, null=True, unique=True)
-    DEFAULT_COUNTRY_CODE = '+977-' 
-    phone_no = models.CharField(max_length=15,default=DEFAULT_COUNTRY_CODE, blank=True, null=True)
+    phone_number = PhoneNumberField( blank=True, null=True, unique=True)
     experience_years = models.IntegerField(null=True, blank=True)
     address = models.CharField(max_length=200, blank=True, null=True)
     nationality=models.CharField(max_length=100, blank=True, null=True, default='')
     state = models.CharField(max_length=50, blank=True, null=True)
     city = models.CharField(max_length=50, blank=True, null=True)
     zipcode = models.CharField(max_length=10, blank=True, null=True)
-    dealer = models.ForeignKey(Dealer, on_delete=models.PROTECT, related_name='fieldstaffs', blank=True, null=True, default=None)
-    company = models.ForeignKey(User, on_delete=models.PROTECT, related_name='fieldstaffs', blank=True, null=True, default=None)
+    dealer = models.ForeignKey(Dealer, on_delete=models.PROTECT, related_name='dealer_fieldstaffs', blank=True, null=True)
+    company = models.ForeignKey(User, on_delete=models.PROTECT, related_name='company_fieldstaffs', blank=True, null=True)
     
     
     
@@ -23,8 +25,20 @@ class FieldStaff(models.Model):
         return str(self.fieldstaff.username)
 
 
+# @receiver(pre_save, sender=FieldStaff)
+# # def set_default_dealer(sender, instance, **kwargs):
+# #     if not instance.dealer and instance.fieldstaff:
+# #         try:
+# #             # Find the associated Dealer based on some criteria (e.g., email or phone number)
+# #             associated_dealer = Dealer.objects.get(email_id=instance.fieldstaff.email)
+# #             instance.dealer = associated_dealer
+# #         except Dealer.DoesNotExist:
+# #             pass
 
 
+# def set_default_dealer(sender, instance, **kwargs):
+#     if not instance.dealer:
+#         instance.dealer = instance.dealer
 
 
 
