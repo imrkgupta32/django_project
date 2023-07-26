@@ -7,7 +7,7 @@ from django.db.models.signals import pre_save
 from django.dispatch import receiver
 
 class FieldStaff(models.Model):
-    fieldstaff = models.ForeignKey(User, on_delete=models.PROTECT, blank=True, null=True)
+    fieldstaff = models.ForeignKey(User, on_delete=models.PROTECT, related_name='fieldstaff_profile', blank=True, null=True)
     email_id = models.EmailField(max_length=254, blank=True, null=True, unique=True)
     phone_number = PhoneNumberField( blank=True, null=True, unique=True)
     experience_years = models.IntegerField(null=True, blank=True)
@@ -16,8 +16,8 @@ class FieldStaff(models.Model):
     state = models.CharField(max_length=50, blank=True, null=True)
     city = models.CharField(max_length=50, blank=True, null=True)
     zipcode = models.CharField(max_length=10, blank=True, null=True)
-    dealer = models.ForeignKey(Dealer, on_delete=models.PROTECT, related_name='dealer_fieldstaffs', blank=True, null=True)
-    company = models.ForeignKey(User, on_delete=models.PROTECT, related_name='company_fieldstaffs', blank=True, null=True)
+    dealer = models.ForeignKey(Dealer, on_delete=models.PROTECT, related_name='dealer_fieldstaff', blank=True, null=True)
+    company = models.ForeignKey(User, on_delete=models.PROTECT, related_name='company_fieldstaf', blank=True, null=True)
     
     
     

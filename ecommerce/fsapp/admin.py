@@ -9,12 +9,7 @@ from .models import Company
 
 @admin.register(FieldStaff)
 class FieldStaffAdmin(admin.ModelAdmin):
-    # def formfield_for_foreignkey(self, db_field, request, **kwargs):
-    #     if db_field.name == 'fieldstaff':
-    #         # Show only fieldstaff entries added by the currently logged-in user
-    #         kwargs['queryset'] = User.objects.filter(fieldstaff__user=request.user)
-    #     return super().formfield_for_foreignkey(db_field, request, **kwargs)
-    
+   
     def get_queryset(self, request):
         queryset = super().get_queryset(request)
         

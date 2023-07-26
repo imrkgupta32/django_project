@@ -15,8 +15,8 @@ class Retailer(models.Model):
     city = models.CharField(max_length=50, blank=True, null=True)
     zipcode = models.CharField(max_length=10, blank=True, null=True)
     fieldstaff = models.ForeignKey(FieldStaff, on_delete=models.PROTECT, blank=True, null=True)
-    dealer = models.ForeignKey(Dealer, on_delete=models.PROTECT, related_name='retailers', blank=True, null=True, default=None)
-    company = models.ForeignKey(User, on_delete=models.PROTECT, related_name='retailers',blank=True, null=True, default=None)
+    dealer = models.ForeignKey(Dealer, on_delete=models.PROTECT, related_name='dealer_retailer', blank=True, null=True, default=None)
+    company = models.ForeignKey(User, on_delete=models.PROTECT, related_name='company_retailer',blank=True, null=True, default=None)
     
     
     

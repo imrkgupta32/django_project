@@ -32,7 +32,6 @@ PRODUCT_LOCATION_STATUS = (
 )
 
 class Product(models.Model):
-    
     name = models.CharField(max_length=254)
     image = models.ImageField(upload_to='product_images/', blank=True, null=True)
     main_category=models.ForeignKey(Category, on_delete=models.SET_NULL, blank=True, null=True)   
@@ -40,7 +39,7 @@ class Product(models.Model):
     description = models.TextField(blank=True, null=True)
     sub_category = models.CharField(max_length=50,blank=True, null=True)
     company = models.ForeignKey(User, on_delete=models.CASCADE, blank=True, null=True)
-    location = models.CharField(max_length=100, blank=True, null=True)
+    
     
     status = models.CharField(
         max_length=1,
@@ -60,10 +59,14 @@ class Product(models.Model):
     )
 
     
-    
-    
     def __str__(self):
-        return self.name
+        return str(self.name)
+
+@receiver(pre_save, sender=Product)
+def set_default_company(sender, instance, **kwargs):
+    if not instance.company:
+        instance.company = instance.name
+
 
 
 
@@ -74,9 +77,6 @@ class Review(models.Model):
     created_at = models.DateTimeField(auto_now_add=True)
     
     
-
-
-
 class Rating(models.Model):
     retailer = models.ForeignKey(User, on_delete=models.CASCADE, blank=True, null=True )
     product = models.ForeignKey(Product, on_delete=models.CASCADE)
@@ -100,6 +100,7 @@ class Orders(models.Model):
     retailer = models.ForeignKey(Retailer, on_delete=models.CASCADE,blank=True, null=True)
     fieldstaff = models.ForeignKey(FieldStaff, on_delete=models.CASCADE,blank=True, null=True)
     dealer = models.ForeignKey(Dealer, on_delete=models.CASCADE,blank=True, null=True)
+    company = models.ForeignKey(User, on_delete=models.CASCADE,  blank=True, null=True)
     order_date = models.DateField()
     price = models.DecimalField(max_digits=10, decimal_places=2, blank=True, null=True)
     status = models.CharField(
@@ -110,11 +111,6 @@ class Orders(models.Model):
         help_text='order availability',
     )
     
-    
-    # def save(self, *args, **kwargs):
-    #     items = self.orderitem_set.all()
-    #     self.total_price = sum(item.product.price * item.quantity for item in items)
-    #     super().save(*args, **kwargs)
 
     def __str__(self):
         return str(self.product)
@@ -132,10 +128,7 @@ class OrderItem(models.Model):
     def __str__(self):
         return str(self.order)
     
-    def save(self, *args, **kwargs):
-        self.total_amount = self.product.price * self.quantity
-        super().save(*args, **kwargs)
-   
+    
 
 
     
@@ -197,7 +190,7 @@ from django.db.models import F
 
 class Cart(models.Model):
     product = models.ForeignKey(Product, on_delete=models.CASCADE, blank=True)
-
+    retailer= models.ForeignKey(User, on_delete=models.CASCADE, null=True, blank=True)
     def __str__(self):
         return str(self.product)
 
@@ -205,17 +198,11 @@ class CartItem(models.Model):
     cart = models.ForeignKey('Cart', on_delete=models.SET_NULL, null=True, blank=True)
     product = models.ForeignKey(Product, on_delete=models.SET_NULL, null=True, blank=True)
     quantity = models.IntegerField(default=1)
-
+    retailer= models.ForeignKey(User, on_delete=models.CASCADE, null=True, blank=True)
     def __str__(self):
         return str(self.cart)
 
-    @property
-    def total_price(self):
-        if self.product and self.product.price is not None:
-            return self.quantity * self.product.price
-        else:
-            return 0.00
-
+    
 
 class Notification(models.Model):
     user = models.ForeignKey(User, on_delete=models.CASCADE)

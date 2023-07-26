@@ -33,9 +33,17 @@ class RetailerAdmin(admin.ModelAdmin):
         return queryset
             
     list_display = ('id','email_id', 'retailer', 'phone_number','address', 'nationality', 'state', 'city', 'zipcode', 'fieldstaff', 'dealer', 'company')
+    exclude=('fieldstaff', 'dealer', 'company',)
     search_fields = ('email_id','phone_number','address', 'nationality', 'state', 'city')
-    list_filter = ('phone_number','address', 'state', 'city')
+    list_filter = ('phone_number','address', 'state', 'city',)
 
+    def save_model(self, request, obj, form, change):
+        print(request.user.fieldstaff_profile.all())
+        if not obj.fieldstaff:
+            obj.fieldstaff = request.user.fieldstaff_profile.all()[0]
+            obj.dealer = request.user.fieldstaff_profile.all()[0].dealer
+            obj.company = request.user.fieldstaff_profile.all()[0].company
+        obj.save()
 
 
 
