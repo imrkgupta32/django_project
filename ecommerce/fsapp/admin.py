@@ -30,10 +30,10 @@ class FieldStaffAdmin(admin.ModelAdmin):
         return queryset
     
     
-    list_display = ('id','email_id', 'fieldstaff',  'phone_number', 'experience_years', 'address', 'nationality', 'state', 'city', 'zipcode', 'dealer', 'company')
+    list_display = ('id','email_id', 'first_name', 'last_name', 'fieldstaff',  'phone_number', 'address', 'nationality', 'state', 'city', 'zipcode', 'dealer', 'company')
     exclude=('dealer', 'company',)
-    search_fields = ( 'phone_number', 'experience_years', 'address', 'nationality', 'state', 'city')
-    list_filter = ('phone_number', 'address', 'state', 'city')
+    search_fields = ( 'phone_number', 'address', 'nationality', 'state', 'city')
+    list_filter = ('company', 'dealer', 'state', 'city')
 
     def save_model(self, request, obj, form, change):
         print(request.user.dealer_profile.all())

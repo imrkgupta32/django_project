@@ -1,5 +1,5 @@
-from django.contrib import admin
-
+from django.urls import reverse
+from django.utils.html import format_html
 # Register your models here.
 from django.contrib import admin
 from .models import Retailer
@@ -32,10 +32,10 @@ class RetailerAdmin(admin.ModelAdmin):
             
         return queryset
             
-    list_display = ('id','email_id', 'retailer', 'phone_number','address', 'nationality', 'state', 'city', 'zipcode', 'fieldstaff', 'dealer', 'company')
-    exclude=('fieldstaff', 'dealer', 'company',)
-    search_fields = ('email_id','phone_number','address', 'nationality', 'state', 'city')
-    list_filter = ('phone_number','address', 'state', 'city',)
+    list_display = ('id','first_name', 'last_name', 'email_id', 'retailer', 'phone_number','address', 'nationality', 'state', 'city', 'zipcode',  'fieldstaff', 'dealer', 'company', 'loyalty_points',)
+    exclude=('fieldstaff', 'dealer', 'company', )
+    search_fields = ('phone_number','address', 'nationality', 'state', 'city')
+    list_filter = ('company', 'dealer', 'fieldstaff', 'state',)
 
     def save_model(self, request, obj, form, change):
         print(request.user.fieldstaff_profile.all())
@@ -46,7 +46,20 @@ class RetailerAdmin(admin.ModelAdmin):
         obj.save()
 
 
+    def orders_summary(self, obj):
+        aggregated_orders = obj.get_aggregated_orders()
+        summary = ""
+        for order in aggregated_orders:
+            summary += f"Order ID: {order['order__id']}, Date: {order['order__order_date']}, Total Amount: {order['total_amount']}, Total Quantity: {order['total_quantity']}\n"
+        return summary
 
+    orders_summary.short_description = "Orders Summary"
+
+
+    def view_loyalty_points(self, obj):
+        url = reverse('view_loyalty_points')
+        return format_html('<a href="{}">View Loyalty Points</a>', url)
+    view_loyalty_points.short_description = 'Loyalty Points'
 
 # from django.contrib import admin
 

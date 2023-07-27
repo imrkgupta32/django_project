@@ -60,13 +60,8 @@ class CustomUserAdmin(UserAdmin):
 admin.site.unregister(User)
 admin.site.register(User, CustomUserAdmin)
 
-from django.contrib import admin
+
 from django.contrib.auth.admin import UserAdmin
-
-
-
-
-
 
 @admin.register(Product)
 class ProductAdmin(admin.ModelAdmin):
@@ -110,7 +105,7 @@ class ProductAdmin(admin.ModelAdmin):
    
    
    
-    list_display = ('id', 'name', 'main_category', 'sub_category', 'description', 'price', 'image', 'status', )
+    list_display = ('id', 'name', 'main_category', 'sub_category', 'description', 'price', 'image', 'status', 'location_status', 'company',)
     exclude=('company',)
     list_filter = ( 'status', 'location_status')
     search_fields = ( 'name', 'description', 'price' )
@@ -129,13 +124,7 @@ from myapp.models import Category
 
 @admin.register(Category)
 class CategoryAdmin(admin.ModelAdmin):
-    # def get_queryset(self, request):
-    #     queryset = super().get_queryset(request)
-    #     if request.user.groups.filter(name='Group_company').exists():
-    #         company = Company.objects.get(company=request.user).company
-    #         queryset = queryset.filter(company=company)
-            
-    #     return queryset    
+       
     list_display = ('id',  'name')
     list_filter= ('name', )
     search_fields = ('name',)
@@ -174,9 +163,21 @@ class RatingAdmin(admin.ModelAdmin):
             obj.retailer = request.user
         super().save_model(request, obj, form, change)
 
+# class OrderItemInline(admin.TabularInline):
+#     model = OrderItem
+#     extra = 1
+#     min_num = 1
 
+#     def get_queryset(self, request):
+#         # Override queryset to display only OrderItems associated with the retailer (if applicable)
+#         queryset = super().get_queryset(request)
+#         user = request.user
 
+#         if user.groups.filter(name='Group_Retailer').exists():
+#             queryset = queryset.filter(retailer=user)
 
+#         return queryset
+from decimal import Decimal
 @admin.register(Orders)
 class OrderAdmin(admin.ModelAdmin):
     
@@ -185,16 +186,13 @@ class OrderAdmin(admin.ModelAdmin):
         
         user = request.user
         
-        
         if user.groups.filter(name='Group_Retailer').exists():
             retails = Retailer.objects.get(retailer=user)
             queryset = queryset.filter(retailer__company=retails.company)
      
-
         if user.groups.filter(name='Group_FieldStaff').exists():
             field_staff = FieldStaff.objects.get(fieldstaff=user)
-            queryset = queryset.filter(retailer__company=field_staff.company)
-     
+            queryset = queryset.filter(retailer__company=field_staff.company)    
         
         if user.groups.filter(name='Group_Dealer').exists():
             dealer = Dealer.objects.get(dealer=user)
@@ -207,23 +205,28 @@ class OrderAdmin(admin.ModelAdmin):
 
         return queryset
     
-    list_display = ('id', 'product',  'order_date', 'status','price', 'retailer', 'fieldstaff', 'dealer', 'company')
-    exclude=('retailer', 'fieldstaff', 'dealer', 'company',)
+    list_display = ('id', 'product', 'price', 'order_date', 'status', 'retailer', 'fieldstaff', 'dealer', 'company')
+    exclude=('retailer', 'fieldstaff', 'dealer', 'company', 'price',)
     list_filter = ('order_date',)
+    # inlines = [OrderItemInline]
     # search_fields = ( 'product', 'retailer', 'fieldstaff', 'dealer', 'order_date')
     
     def save_model(self, request, obj, form, change):
         print(request.user.retailer_profile.all())
         if not obj.retailer:
+            obj.price = obj.product.price if obj.product else Decimal('0.00')
             obj.retailer = request.user.retailer_profile.all()[0]
             obj.fieldstaff = request.user.retailer_profile.all()[0].fieldstaff
             obj.dealer = request.user.retailer_profile.all()[0].dealer
             obj.company = request.user.retailer_profile.all()[0].company
         obj.save()
 
-    
-    
+from django.db.models import Count
 
+orders = Orders.objects.values_list('retailer', 'product', 'price').annotate(total_orders=Count('id'))
+    
+    
+from django.contrib import messages
 @admin.register(OrderItem)
 class OrderItemAdmin(admin.ModelAdmin):
     
@@ -248,15 +251,52 @@ class OrderItemAdmin(admin.ModelAdmin):
 
         return queryset
 
-    list_display = ('order', 'quantity','product', 'total_amount' )
+    
+    list_display = ('order', 'retailer', 'quantity','product', 'total_amount',)
+    exclude=('total_amount', 'retailer', 'loyalty_points',)
     list_filter = ( 'quantity', )
     # search_fields = ('quantity', )
+    def save_model(self, request, obj, form, change):
+        if not obj.retailer:
+            try:
+                retailer = Retailer.objects.get(retailer=request.user)
+                obj.retailer = retailer
+            except Retailer.DoesNotExist:
+               
+                pass
+        super().save_model(request, obj, form, change)
     
-       
+
+    def save_model(self, request, obj, form, change):
+        if not obj.retailer:
+            try:
+                retailer_profile = request.user.retailer_profile.first()
+                if retailer_profile:
+                    obj.retailer = retailer_profile
+                    obj.save()
+            except Retailer.DoesNotExist:
+                pass
+                
+        super().save_model(request, obj, form, change)       
+
 from myapp.models import Cart
 from myapp.models import CartItem
-admin.site.register(Cart)
 class CartAdmin(admin.ModelAdmin):
+    
+    def get_queryset(self, request):
+        queryset = super().get_queryset(request)
+        
+        if request.user.groups.filter(name='Group_Retailer').exists():
+            retailer = request.user  # Assuming request.user is a User instance representing the logged-in retailer
+            queryset = queryset.filter(retailer=retailer)
+            
+            
+
+        return queryset
+    
+    
+    
+    
     
     list_display= ('id', 'product', 'retailer')
     exclude=('retailer',)
@@ -269,11 +309,24 @@ class CartAdmin(admin.ModelAdmin):
         super().save_model(request, obj, form, change)
 
     
+    pass
+    
+admin.site.register(Cart, CartAdmin)        
+
+class CartItemAdmin(admin.ModelAdmin):  
+    def get_queryset(self, request):
+        queryset = super().get_queryset(request)
         
-admin.site.register(CartItem)
-class CartItemAdmin(admin.ModelAdmin):
-    list_display= ('id', 'cart', 'product', 'quantity', 'retailer')
-    exclude=('retailer',)
+        if request.user.groups.filter(name='Group_Retailer').exists():
+            retailer = request.user
+            queryset = queryset.filter(cart__retailer=retailer)
+
+        return queryset
+    
+    
+    
+    list_display= ('id', 'cart', 'product', 'quantity', 'price', 'retailer')
+    exclude=('retailer','price',)
     list_filter= ('product', 'quantity')
     search_fields= ('id', 'product', 'quantity','cart')
     
@@ -282,8 +335,14 @@ class CartItemAdmin(admin.ModelAdmin):
         if not obj.retailer:
             obj.retailer = request.user
         super().save_model(request, obj, form, change)
+        
+    pass
 
-   
+admin.site.register(CartItem, CartItemAdmin)   
+
+
+
+
 from .models import Notification
 class NotificationAdmin(admin.ModelAdmin):
     list_display = ('user', 'message', 'timestamp', 'is_read')
@@ -300,21 +359,43 @@ class NotificationAdmin(admin.ModelAdmin):
 admin.site.register(Notification, NotificationAdmin)    
     
 
-from .models import LoyaltyPoints
-@admin.register(LoyaltyPoints)
-class LoyaltyPointsAdmin(admin.ModelAdmin):
-    list_display = ('order', 'retailer', 'points_gained')
-    list_filter = ('retailer',)
-    search_fields = ('order__product__name', 'retailer__username')
+# from .models import LoyaltyPoints
+# @admin.register(LoyaltyPoints)
+# class LoyaltyPointsAdmin(admin.ModelAdmin):
+    
+    
+#     def get_queryset(self, request):
+#         queryset = super().get_queryset(request)
+        
+#         if request.user.groups.filter(name='Group_Retailer').exists():
+#             retailer = Retailer.objects.get(retailer=request.user)
+#             queryset = queryset.filter(order__retailer=retailer)
+        
+#         if request.user.groups.filter(name='Group_FieldStaff').exists():
+#             fieldstaff = FieldStaff.objects.get(fieldstaff=request.user)
+#             queryset = queryset.filter(order__fieldstaff=fieldstaff)
 
-    def save_model(self, request, obj, form, change):
-        # Calculate and set the loyalty points before saving the model
-        obj.points_gained = obj.collect_points()
-        super().save_model(request, obj, form, change)
+#         if request.user.groups.filter(name='Group_Dealer').exists():
+#             dealer = Dealer.objects.get(dealer=request.user)
+#             queryset = queryset.filter(order__dealer=dealer)
 
+#         if request.user.groups.filter(name='Group_company').exists():
+#             company = Company.objects.get(company=request.user).company
+#             queryset = queryset.filter(order__dealer__company=company)
 
+#         return queryset
 
+    
+    # list_display = ('order', 'points_gained', 'retailer')
+    # exclude=('retailer',)
+    # list_filter = ('retailer',)
+    # search_fields = ('order__product__name', 'retailer__username')
 
+    
+    # def save_model(self, request, obj, form, change):
+    #     if not obj.retailer:
+    #         obj.retailer = request.user
+    #     super().save_model(request, obj, form, change)
 
     
     

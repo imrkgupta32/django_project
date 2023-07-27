@@ -29,10 +29,10 @@ class DealerAdmin(admin.ModelAdmin):
                 
             
         return queryset
-    list_display = ('id', 'dealer', 'email_id', 'phone_number', 'experience_years', 'address', 'nationality', 'state', 'city', 'zipcode', 'company')
+    list_display = ('id', 'dealer', 'first_name', 'last_name', 'email_id', 'phone_number',  'address', 'nationality', 'state', 'city', 'zipcode', 'company')
     exclude=('company',)      
-    search_fields = ( 'email_id', 'phone_number', 'experience_years', 'address', 'nationality', 'state', 'city')
-    list_filter = ('email_id', 'phone_number', 'address', 'state', 'city',)
+    search_fields = (  'phone_number',  'address', 'nationality', 'state', 'city')
+    list_filter = ('company', 'state', )
 
         
         

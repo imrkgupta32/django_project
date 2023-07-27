@@ -60,3 +60,21 @@
 #     class Meta:
 #         Models =CustomUser
 #         fields= ('username', 'email', 'password1', 'password2', 'is_company', 'is_dealer', 'is_fieldstaff', 'is_retailer')
+
+
+from django.contrib.auth.forms import UserCreationForm, UserChangeForm
+
+from .models import CustomUser
+
+class CustomUserCreationForm(UserCreationForm):
+
+    class Meta:
+        model = CustomUser
+        fields = ("username",)
+
+
+class CustomUserChangeForm(UserChangeForm):
+
+    class Meta:
+        model = CustomUser
+        fields = ("username",)

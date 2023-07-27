@@ -11,7 +11,7 @@ class Company(models.Model):
     state = models.CharField(max_length=50, blank=True, null=True, default='')
     city = models.CharField(max_length=50, blank=True, null=True, default='')
     zipcode = models.CharField(max_length=10, blank=True, null=True, default='')
-    
+   
     
 
 

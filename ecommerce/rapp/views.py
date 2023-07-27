@@ -24,25 +24,11 @@
 
 
 from django.http import HttpResponse
-from django.shortcuts import render, redirect
-from .models import Retailer
+from django.shortcuts import render
+from django.contrib.auth.decorators import login_required
 
-def retailer_detail(request, retailer_id):
-    retailers = Retailer.objects.filter(id=retailer_id)
-    
-    if retailers.exists():
-        retailer = retailers.first()
-        response_data = {
-            'name': retailer.name,
-            'email_id': retailer.email_id,
-            'ph_no': retailer.ph_no,
-            'state': retailer.state,
-            'city': retailer.city,
-            'zipcode': retailer.zipcode,
-            'fieldstaff': retailer.fieldstaff.name,
-            'dealer': retailer.dealer.name,
-            'company': retailer.company.name,
-        }
-        return HttpResponse(response_data, content_type='application/json')
-    else:
-        return HttpResponse('Retailer not found.', status=404)
+@login_required
+def view_loyalty_points(request):
+    retailer = request.user.retailer_profile.first()
+    loyalty_points = retailer.loyalty_points if retailer else 0
+    return render(request, 'loyalty_points.html', {'loyalty_points': loyalty_points})

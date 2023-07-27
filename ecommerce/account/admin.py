@@ -1,32 +1,36 @@
+
+from django.contrib.auth.models import User
 from django.contrib import admin
 from django.contrib.auth.admin import UserAdmin
-from django.contrib.auth.models import User
+
+from .forms import CustomUserCreationForm, CustomUserChangeForm
+from .models import CustomUser
 
 admin.site.unregister(User)
 
 @admin.register(User)
 class CustomUserAdmin(UserAdmin):
-    # Customize the User admin as per your requirements
-    list_display = ('username', 'email', 'first_name', 'last_name', 'is_staff', 'is_active')
-    list_filter = ('is_staff', 'is_active')
-    # search_fields = ('username', 'email', 'first_name', 'last_name')
+    add_form = CustomUserCreationForm
+    form = CustomUserChangeForm
+    model = CustomUser
+    list_display = ("username", "is_staff", "is_active", "added_by",)
+    list_filter = ("username", "is_staff", "is_active", "added_by",)
     fieldsets = (
-        (None, {'fields': ('username', 'password')}),
-        ('Personal Info', {'fields': ('first_name', 'last_name', 'email')}),
-        ('Permissions', {'fields': ('is_active', 'is_staff', 'is_superuser', 'groups', 'user_permissions')}),
-        ('Important Dates', {'fields': ('last_login', 'date_joined')}),
+        (None, {"fields": ("username", "password")}),
+        ("Permissions", {"fields": ("is_staff", "is_active", "groups", "user_permissions", "added_by",)}),
     )
+    add_fieldsets = (
+        (None, {
+            "classes": ("wide",),
+            "fields": (
+                "username", "password1", "password2", "is_staff",
+                "is_active", "groups", "user_permissions", "added_by",
+            )}
+        ),
+    )
+    search_fields = ("username",)
+    ordering = ("username",)
 
-# If you have any other models to register, import them and register them here.
 
-# Example: Registering the Dealer model
-# from .models import Dealer
-
-# @admin.register(Dealer)
-# class DealerAdmin(admin.ModelAdmin):
-#     list_display = ('dealer', 'email_id', 'phone_no', 'experience_years', 'address')
-#     search_fields = ('dealer__username', 'dealer__email', 'email_id', 'phone_no')
-#     # Customize other fields and admin options as per your requirements
-
-# If you have any other models to register, import them and register them here.
+admin.site.register(CustomUser, CustomUserAdmin)
 
