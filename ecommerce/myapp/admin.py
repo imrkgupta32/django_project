@@ -163,20 +163,13 @@ class RatingAdmin(admin.ModelAdmin):
             obj.retailer = request.user
         super().save_model(request, obj, form, change)
 
-# class OrderItemInline(admin.TabularInline):
-#     model = OrderItem
-#     extra = 1
-#     min_num = 1
 
-#     def get_queryset(self, request):
-#         # Override queryset to display only OrderItems associated with the retailer (if applicable)
-#         queryset = super().get_queryset(request)
-#         user = request.user
 
-#         if user.groups.filter(name='Group_Retailer').exists():
-#             queryset = queryset.filter(retailer=user)
+class OrderItemInline(admin.TabularInline):
+    model = OrderItem
+    extra = 0
 
-#         return queryset
+
 from decimal import Decimal
 @admin.register(Orders)
 class OrderAdmin(admin.ModelAdmin):
@@ -208,7 +201,7 @@ class OrderAdmin(admin.ModelAdmin):
     list_display = ('id', 'product', 'price', 'order_date', 'status', 'retailer', 'fieldstaff', 'dealer', 'company')
     exclude=('retailer', 'fieldstaff', 'dealer', 'company', 'price',)
     list_filter = ('order_date',)
-    # inlines = [OrderItemInline]
+    inlines = [OrderItemInline]
     # search_fields = ( 'product', 'retailer', 'fieldstaff', 'dealer', 'order_date')
     
     def save_model(self, request, obj, form, change):
@@ -256,29 +249,40 @@ class OrderItemAdmin(admin.ModelAdmin):
     exclude=('total_amount', 'retailer', 'loyalty_points',)
     list_filter = ( 'quantity', )
     # search_fields = ('quantity', )
-    def save_model(self, request, obj, form, change):
-        if not obj.retailer:
-            try:
-                retailer = Retailer.objects.get(retailer=request.user)
-                obj.retailer = retailer
-            except Retailer.DoesNotExist:
-               
-                pass
-        super().save_model(request, obj, form, change)
     
-
+    
+    
     def save_model(self, request, obj, form, change):
         if not obj.retailer:
             try:
                 retailer_profile = request.user.retailer_profile.first()
                 if retailer_profile:
                     obj.retailer = retailer_profile
-                    obj.save()
+                else:
+                    # Create a new Retailer instance if none exists
+                    obj.retailer = Retailer.objects.create(name='New Retailer')
             except Retailer.DoesNotExist:
+                # Handle the case when the retailer profile does not exist
+                # You can create a new Retailer instance if needed or handle it as per your requirements
                 pass
-                
-        super().save_model(request, obj, form, change)       
+        
+        super().save_model(request, obj, form, change)
 
+        # Calculate the loyalty points earned by the retailer
+        if not obj.total_amount:
+            # Retrieve the price of the associated product
+            product_price = obj.product.price if obj.product else Decimal('0.00')
+            # Calculate the total amount based on the quantity and product price
+            obj.total_amount = product_price * obj.quantity
+
+            # Calculate and update the loyalty points earned by the retailer
+            loyalty_points_earned = int(obj.total_amount)  # 1 point for every Rs 1 spent
+            obj.retailer.loyalty_points += loyalty_points_earned
+            obj.retailer.save()
+    
+    
+    
+    
 from myapp.models import Cart
 from myapp.models import CartItem
 class CartAdmin(admin.ModelAdmin):
@@ -359,191 +363,3 @@ class NotificationAdmin(admin.ModelAdmin):
 admin.site.register(Notification, NotificationAdmin)    
     
 
-# from .models import LoyaltyPoints
-# @admin.register(LoyaltyPoints)
-# class LoyaltyPointsAdmin(admin.ModelAdmin):
-    
-    
-#     def get_queryset(self, request):
-#         queryset = super().get_queryset(request)
-        
-#         if request.user.groups.filter(name='Group_Retailer').exists():
-#             retailer = Retailer.objects.get(retailer=request.user)
-#             queryset = queryset.filter(order__retailer=retailer)
-        
-#         if request.user.groups.filter(name='Group_FieldStaff').exists():
-#             fieldstaff = FieldStaff.objects.get(fieldstaff=request.user)
-#             queryset = queryset.filter(order__fieldstaff=fieldstaff)
-
-#         if request.user.groups.filter(name='Group_Dealer').exists():
-#             dealer = Dealer.objects.get(dealer=request.user)
-#             queryset = queryset.filter(order__dealer=dealer)
-
-#         if request.user.groups.filter(name='Group_company').exists():
-#             company = Company.objects.get(company=request.user).company
-#             queryset = queryset.filter(order__dealer__company=company)
-
-#         return queryset
-
-    
-    # list_display = ('order', 'points_gained', 'retailer')
-    # exclude=('retailer',)
-    # list_filter = ('retailer',)
-    # search_fields = ('order__product__name', 'retailer__username')
-
-    
-    # def save_model(self, request, obj, form, change):
-    #     if not obj.retailer:
-    #         obj.retailer = request.user
-    #     super().save_model(request, obj, form, change)
-
-    
-    
-# from django.contrib import admin
-# from .models import   Product, Orders, OrderItem
-# # Register your models here.
-
-
-# from fsapp.models import FieldStaff
-# from dapp.models import Dealer
-# from capp.models import Company
-# from rapp.models import Retailer
-# from .models import User
-# from django.contrib.auth.admin import UserAdmin
-# from django.contrib import admin
-# from django.db.models import Q
-# from itertools import chain
-# class CustomUserAdmin(UserAdmin):
-#     def get_queryset(self, request):
-        
-#         # Retrieve the default queryset
-#         queryset = super().get_queryset(request)
-        
-#         # Apply your custom query here
-#         # For example, filter users with a specific condition
-#         ids = [request.user.id,]
-#         if request.user.groups.filter(name='Group_Dealer').exists():
-#             queryset1 = FieldStaff.objects.filter(dealer = Dealer.objects.get(dealer=request.user))
-#             for i in queryset1:
-#                 ids.append(i.fieldstaff.id)
-#             queryset2 = Retailer.objects.filter(dealer = Dealer.objects.get(dealer=request.user))
-#             for i in queryset2:
-#                 ids.append(i.retailer.id)
-#             print(ids)
-#             queryset = queryset.filter(Q(pk__in=ids))
-            
-#         elif request.user.groups.filter(name='Group_company').exists():
-#             queryset3 = Dealer.objects.filter(company=request.user)
-#             for i in queryset3:
-#                 ids.append(i.dealer.id)
-#             queryset1 = FieldStaff.objects.filter(company=request.user)
-#             for i in queryset1:
-#                 ids.append(i.fieldstaff.id)
-#             queryset2 = Retailer.objects.filter(company=request.user)
-#             for i in queryset2:
-#                 ids.append(i.retailer.id)
-#             queryset = queryset.filter(Q(pk__in=ids))
-            
-#         elif request.user.groups.filter(name='Group_FieldStaff').exists():
-#             queryset2 = Retailer.objects.filter(fieldstaff=FieldStaff.objects.get(fieldstaff=request.user))
-#             for i in queryset2:
-#                 ids.append(i.retailer.id)
-#             queryset = queryset.filter(Q(pk__in=ids))
-#         else:
-#             pass
-        
-#         print(queryset)
-        
-#         return queryset
-
-
-# admin.site.unregister(User)
-# admin.site.register(User, CustomUserAdmin)
-
-# from django.contrib import admin
-# from django.contrib.auth.admin import UserAdmin
-
-# @admin.register(Product)
-# class DealerAdmin(admin.ModelAdmin):
-#     def get_queryset(self, request):
-#         queryset = super().get_queryset(request)
-#         if request.user.groups.filter(name='Group_FieldStaff').exists():
-#             company = FieldStaff.objects.get(fieldstaff=request.user).company
-#             queryset = queryset.filter(company=company)
-            
-#         if request.user.groups.filter(name='Group_Dealer').exists():
-#             company = Dealer.objects.get(dealer=request.user).company
-#             queryset = queryset.filter(company=company)
-
-#         if request.user.groups.filter(name='Group_company').exists():
-#             company = Company.objects.get(company=request.user).company
-#             queryset = queryset.filter(company=company)
-                
-            
-#         return queryset
-#     list_display = ('id', 'name', 'category', 'sub_category', 'description', 'price', 'image', 'company' )
-   
-
-
-
-
-
-# @admin.register(Orders)
-# class OrderAdmin(admin.ModelAdmin):
-    
-#     def get_queryset(self, request):
-#         queryset = super().get_queryset(request)
-        
-#         user = request.user
-        
-        
-#         if user.groups.filter(name='Group_Retailer').exists():
-#             retails = Retailer.objects.get(retailer=user)
-#             queryset = queryset.filter(retailer__company=retails.company)
-     
-
-#         if user.groups.filter(name='Group_FieldStaff').exists():
-#             field_staff = FieldStaff.objects.get(fieldstaff=user)
-#             queryset = queryset.filter(retailer__company=field_staff.company)
-     
-        
-        
-#         if user.groups.filter(name='Group_Dealer').exists():
-#             dealer = Dealer.objects.get(dealer=user)
-#             queryset = queryset.filter(dealer__company=dealer.company)    
-        
-#         if request.user.groups.filter(name='Group_company').exists():
-#             company = Company.objects.get(company=request.user).company
-#             # Filter the queryset to include orders related to the company
-#             queryset = queryset.filter(dealer__company=company)
-
-#         return queryset
-  
-#     list_display = ('id', 'name', 'retailer', 'fieldstaff', 'dealer', 'order_date', 'total_amount')
-
-# @admin.register(OrderItem)
-# class OrderItemAdmin(admin.ModelAdmin):
-    
-#     def get_queryset(self, request):
-#         queryset = super().get_queryset(request)
-        
-#         if request.user.groups.filter(name='Group_Retailer').exists():
-#             retailer = Retailer.objects.get(retailer=request.user)
-#             queryset = queryset.filter(order__retailer=retailer)
-        
-#         if request.user.groups.filter(name='Group_FieldStaff').exists():
-#             fieldstaff = FieldStaff.objects.get(fieldstaff=request.user)
-#             queryset = queryset.filter(order__fieldstaff=fieldstaff)
-
-#         if request.user.groups.filter(name='Group_Dealer').exists():
-#             dealer = Dealer.objects.get(dealer=request.user)
-#             queryset = queryset.filter(order__dealer=dealer)
-
-#         if request.user.groups.filter(name='Group_company').exists():
-#             company = Company.objects.get(company=request.user).company
-#             queryset = queryset.filter(order__dealer__company=company)
-
-#         return queryset
-
-
-#     list_display = ('order', 'quantity', 'price')
