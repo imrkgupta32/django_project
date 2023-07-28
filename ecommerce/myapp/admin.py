@@ -169,7 +169,11 @@ class OrderItemInline(admin.TabularInline):
     model = OrderItem
     extra = 0
 
-
+# from django.utils.html import format_html
+from django.db.models.signals import post_save
+from django.dispatch import receiver
+from django.db.models import Sum, F, DecimalField,  Case, When
+from django.db.models.functions import Coalesce
 from decimal import Decimal
 @admin.register(Orders)
 class OrderAdmin(admin.ModelAdmin):
@@ -198,12 +202,21 @@ class OrderAdmin(admin.ModelAdmin):
 
         return queryset
     
-    list_display = ('id', 'product', 'price', 'order_date', 'status', 'retailer', 'fieldstaff', 'dealer', 'company')
-    exclude=('retailer', 'fieldstaff', 'dealer', 'company', 'price',)
+    list_display = ('id', 'product', 'price', 'order_date', 'status', 'order_location', 'retailer', 'fieldstaff', 'dealer', 'company', 'total_purchase',)
+    exclude=('retailer', 'fieldstaff', 'dealer', 'company', 'price', 'total_purchase',)
     list_filter = ('order_date',)
     inlines = [OrderItemInline]
     # search_fields = ( 'product', 'retailer', 'fieldstaff', 'dealer', 'order_date')
     
+    def total_purchase(self, obj):
+        return obj.total_purchase
+
+    total_purchase.short_description = 'Total Purchase'
+    total_purchase.admin_order_field = 'total_purchase'
+
+
+    
+        
     def save_model(self, request, obj, form, change):
         print(request.user.retailer_profile.all())
         if not obj.retailer:
@@ -213,7 +226,16 @@ class OrderAdmin(admin.ModelAdmin):
             obj.dealer = request.user.retailer_profile.all()[0].dealer
             obj.company = request.user.retailer_profile.all()[0].company
         obj.save()
+        
+        super().save_model(request, obj, form, change)
 
+        # Calculate the total_purchased based on the sum of total_amounts of associated OrderItems
+        total_purchase = form.instance.orderitem_set.aggregate(total_purchase=Sum('total_amount'))['total_purchase']
+        form.instance.total_purchase = total_purchase if total_purchase is not None else 0.0
+        form.instance.save()
+        
+    
+        
 from django.db.models import Count
 
 orders = Orders.objects.values_list('retailer', 'product', 'price').annotate(total_orders=Count('id'))
@@ -252,6 +274,9 @@ class OrderItemAdmin(admin.ModelAdmin):
     
     
     
+    
+    
+    
     def save_model(self, request, obj, form, change):
         if not obj.retailer:
             try:
@@ -262,13 +287,11 @@ class OrderItemAdmin(admin.ModelAdmin):
                     # Create a new Retailer instance if none exists
                     obj.retailer = Retailer.objects.create(name='New Retailer')
             except Retailer.DoesNotExist:
-                # Handle the case when the retailer profile does not exist
-                # You can create a new Retailer instance if needed or handle it as per your requirements
+               
                 pass
         
-        super().save_model(request, obj, form, change)
-
-        # Calculate the loyalty points earned by the retailer
+       
+    # def save_model(self, request, obj, form, change):    
         if not obj.total_amount:
             # Retrieve the price of the associated product
             product_price = obj.product.price if obj.product else Decimal('0.00')
@@ -279,7 +302,8 @@ class OrderItemAdmin(admin.ModelAdmin):
             loyalty_points_earned = int(obj.total_amount)  # 1 point for every Rs 1 spent
             obj.retailer.loyalty_points += loyalty_points_earned
             obj.retailer.save()
-    
+            
+        super().save_model(request, obj, form, change)
     
     
     

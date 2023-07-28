@@ -87,6 +87,15 @@ ORDERED_STATUS = (
 )
 
 
+ORDER_LOCATION_STATUS = (
+    ('w', 'Warehouse'),
+    ('s', 'In Store'),
+    ('t', 'In Transit'),
+    ('d', 'Delivered'),
+)
+
+
+from django.db.models import Sum
 class Orders(models.Model):
     product = models.ForeignKey(Product, on_delete=models.CASCADE, blank=True, null=True)
     retailer = models.ForeignKey(Retailer, on_delete=models.CASCADE,blank=True, null=True)
@@ -95,6 +104,7 @@ class Orders(models.Model):
     company = models.ForeignKey(User, on_delete=models.CASCADE,  blank=True, null=True)
     order_date = models.DateField()
     price = models.DecimalField(max_digits=10, decimal_places=2, blank=True, null=True)
+    total_purchase = models.DecimalField(max_digits=10, decimal_places=2, blank=True, null=True)
     status = models.CharField(
         max_length=1,
         choices=ORDERED_STATUS,
@@ -103,14 +113,32 @@ class Orders(models.Model):
         help_text='order availability',
     )
     
+    
+    
+    order_location = models.CharField(
+        max_length=1,
+        choices=PRODUCT_LOCATION_STATUS,
+        blank=True,
+        default='s',
+        help_text='Product location status',
+    )
 
     def __str__(self):
         return str(self.product)
 
     
     
-
-     
+    @property
+    def total_purchase(self):
+        return self.orderitem_set.aggregate(total_purchase=Sum('total_amount'))['total_purchase'] or 0.0
+    
+    
+    @total_purchase.setter
+    def total_purchase(self, value):
+        self._total_purchase = value
+    
+    
+    
 # from .utils import calculate_loyalty_points
 class OrderItem(models.Model):
     order = models.ForeignKey(Orders, on_delete=models.CASCADE,blank=True, null=True)
@@ -122,9 +150,7 @@ class OrderItem(models.Model):
     def __str__(self):
         return str(self.order)
     
-    
-    
-    
+
     def save(self, *args, **kwargs):
         if not self.total_amount:
             # Retrieve the price of the associated product
@@ -132,7 +158,7 @@ class OrderItem(models.Model):
             # Calculate the total amount based on the quantity and product price
             self.total_amount = product_price * self.quantity
                
-       
+    # def save(self, *args, **kwargs):   
         if not self.total_amount:
             # Retrieve the price of the associated product
             product_price = self.product.price if self.product else Decimal('0.00')
@@ -146,17 +172,17 @@ class OrderItem(models.Model):
 
         super(OrderItem, self).save(*args, **kwargs)
     
-    
-    
-from django.db.models.signals import pre_save
-from django.dispatch import receiver
+
 
 
 @receiver(pre_save, sender=OrderItem)
 def update_total_amount(sender, instance, **kwargs):
     instance.total_amount = instance.product.price * instance.quantity
     
+ 
     
+from django.db.models.signals import pre_save
+from django.dispatch import receiver    
 from decimal import Decimal      
 
 
