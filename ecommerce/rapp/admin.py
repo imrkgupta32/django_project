@@ -34,7 +34,7 @@ class RetailerAdmin(admin.ModelAdmin):
             
     list_display = ('id','first_name', 'last_name', 'email_id', 'retailer', 'phone_number','address', 'nationality', 'state', 'city', 'zipcode',  'fieldstaff', 'dealer', 'company', 'loyalty_points',)
     exclude=('fieldstaff', 'dealer', 'company', )
-    search_fields = ('phone_number','address', 'nationality', 'state', 'city')
+    search_fields = ('first_name', 'last_name','phone_number','address', 'nationality', 'state', 'city')
     list_filter = ('company', 'dealer', 'fieldstaff', 'state',)
 
     def save_model(self, request, obj, form, change):

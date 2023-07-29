@@ -130,8 +130,9 @@ class Orders(models.Model):
     
     @property
     def total_purchase(self):
-        return self.orderitem_set.aggregate(total_purchase=Sum('total_amount'))['total_purchase'] or 0.0
-    
+        total_purchase = Orders.objects.filter(retailer=self.retailer, company=self.company).aggregate(total_purchase=Sum('orderitem__total_amount'))['total_purchase']
+        return total_purchase or 0.0
+        
     
     @total_purchase.setter
     def total_purchase(self, value):

@@ -32,7 +32,7 @@ class FieldStaffAdmin(admin.ModelAdmin):
     
     list_display = ('id','email_id', 'first_name', 'last_name', 'fieldstaff',  'phone_number', 'address', 'nationality', 'state', 'city', 'zipcode', 'dealer', 'company')
     exclude=('dealer', 'company',)
-    search_fields = ( 'phone_number', 'address', 'nationality', 'state', 'city')
+    search_fields = ('first_name', 'last_name', 'phone_number', 'address', 'nationality', 'state', 'city')
     list_filter = ('company', 'dealer', 'state', 'city')
 
     def save_model(self, request, obj, form, change):

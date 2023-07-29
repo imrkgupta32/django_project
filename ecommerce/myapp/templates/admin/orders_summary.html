@@ -1,0 +1,38 @@
+{% extends "admin/change_list.html" %}
+
+{% block content %}
+    <div class="module">
+        <table>
+            <thead>
+                <tr>
+                    <th>Retailer</th>
+                    <th>Field Staff</th>
+                    <th>Dealer</th>
+                    <th>Company</th>
+                    <th>Total Orders</th>
+                    <th>Total Purchase</th>
+                    <th>Order Details</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for retailer_name, retailer_data in retailer_order_summary.items %}
+                    <tr>
+                        <td>{{ retailer_name }}</td>
+                        <td>{{ retailer_data.fieldstaff }}</td>
+                        <td>{{ retailer_data.dealer }}</td>
+                        <td>{{ retailer_data.company }}</td>
+                        <td>{{ retailer_data.total_orders }}</td>
+                        <td>{{ retailer_data.total_purchase }}</td>
+                        <td>
+                            <ul>
+                                {% for order in retailer_data.orders %}
+                                    <li>{{ order.product }} - {{ order.price }}</li>
+                                {% endfor %}
+                            </ul>
+                        </td>
+                    </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+{% endblock %}

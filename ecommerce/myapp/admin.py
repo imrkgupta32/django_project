@@ -1,8 +1,5 @@
 from django.contrib import admin
 from .models import   Product, Orders, OrderItem
-# Register your models here.
-
-
 from fsapp.models import FieldStaff
 from dapp.models import Dealer
 from capp.models import Company
@@ -11,7 +8,7 @@ from .models import User
 from django.contrib.auth.admin import UserAdmin
 from django.contrib import admin
 from django.db.models import Q
-from itertools import chain
+from django.template.response import TemplateResponse
 
 class CustomUserAdmin(UserAdmin):
     def get_queryset(self, request):
@@ -59,10 +56,7 @@ class CustomUserAdmin(UserAdmin):
 
 admin.site.unregister(User)
 admin.site.register(User, CustomUserAdmin)
-
-
 from django.contrib.auth.admin import UserAdmin
-
 @admin.register(Product)
 class ProductAdmin(admin.ModelAdmin):
     
@@ -121,7 +115,6 @@ class ProductAdmin(admin.ModelAdmin):
     
 
 from myapp.models import Category
-
 @admin.register(Category)
 class CategoryAdmin(admin.ModelAdmin):
        
@@ -172,7 +165,7 @@ class OrderItemInline(admin.TabularInline):
 # from django.utils.html import format_html
 from django.db.models.signals import post_save
 from django.dispatch import receiver
-from django.db.models import Sum, F, DecimalField,  Case, When
+from django.db.models import Sum, F, DecimalField,  Case, When, Subquery, OuterRef, IntegerField
 from django.db.models.functions import Coalesce
 from decimal import Decimal
 @admin.register(Orders)
@@ -180,12 +173,13 @@ class OrderAdmin(admin.ModelAdmin):
     
     def get_queryset(self, request):
         queryset = super().get_queryset(request)
-        
+       
         user = request.user
         
         if user.groups.filter(name='Group_Retailer').exists():
-            retails = Retailer.objects.get(retailer=user)
-            queryset = queryset.filter(retailer__company=retails.company)
+            retailer_profile = user.retailer_profile.first()
+            if retailer_profile:
+                queryset = queryset.filter(retailer=retailer_profile)
      
         if user.groups.filter(name='Group_FieldStaff').exists():
             field_staff = FieldStaff.objects.get(fieldstaff=user)
@@ -198,15 +192,52 @@ class OrderAdmin(admin.ModelAdmin):
         if request.user.groups.filter(name='Group_company').exists():
             company = Company.objects.get(company=request.user).company
             # Filter the queryset to include orders related to the company
-            queryset = queryset.filter(dealer__company=company)
+            queryset = queryset.filter(dealer__company=company)  
+        
+        
 
         return queryset
+
+    def save_model_status(self, request, obj, form, change):
+        # Update the location_status based on the status if needed
+        if obj.status == 'd':  # If the status is 'Delivered'
+            obj.order_location = 'd'  # Set location_status to 'Delivered'
+        obj.save()
+
+    def get_readonly_fields(self, request, obj=None):
+        # Make the location_status field readonly for certain conditions
+        if obj and obj.status == 'd':
+            return ('order_location',)
+        return super().get_readonly_fields(request, obj)
+
+    def has_delete_permission(self, request, obj=None):
+        # Disable delete action for products with 'Delivered' status
+        if obj and obj.status == 'd':
+            return False
+        return super().has_delete_permission(request, obj)   
+
+        
+       
+        
+        
+        
+       
+        
     
     list_display = ('id', 'product', 'price', 'order_date', 'status', 'order_location', 'retailer', 'fieldstaff', 'dealer', 'company', 'total_purchase',)
+    readonly_fields = ('total_purchase',) 
     exclude=('retailer', 'fieldstaff', 'dealer', 'company', 'price', 'total_purchase',)
     list_filter = ('order_date',)
     inlines = [OrderItemInline]
     # search_fields = ( 'product', 'retailer', 'fieldstaff', 'dealer', 'order_date')
+    
+    
+    def retailer_with_orders(self, obj):
+        return obj.retailer.name
+
+    retailer_with_orders.short_description = 'Retailer'
+    retailer_with_orders.admin_order_field = 'retailer__name'
+    
     
     def total_purchase(self, obj):
         return obj.total_purchase
@@ -214,8 +245,6 @@ class OrderAdmin(admin.ModelAdmin):
     total_purchase.short_description = 'Total Purchase'
     total_purchase.admin_order_field = 'total_purchase'
 
-
-    
         
     def save_model(self, request, obj, form, change):
         print(request.user.retailer_profile.all())
@@ -274,9 +303,6 @@ class OrderItemAdmin(admin.ModelAdmin):
     
     
     
-    
-    
-    
     def save_model(self, request, obj, form, change):
         if not obj.retailer:
             try:
@@ -322,6 +348,28 @@ class CartAdmin(admin.ModelAdmin):
 
         return queryset
     
+    # def get_queryset(self, request):
+    #     queryset = super().get_queryset(request)
+    #     user = request.user
+
+    #     if user.groups.filter(name='Group_Retailer').exists():
+    #         retailer_profile = user.retailer_profile.first()
+    #         if retailer_profile:
+    #             queryset = queryset.filter(retailer=retailer_profile)
+
+    #     # if user.groups.filter(name='Group_FieldStaff').exists():
+        #     field_staff = FieldStaff.objects.get(fieldstaff=user)
+        #     queryset = queryset.filter(Q(retailer__company=field_staff.company) | Q(fieldstaff=user))
+
+        # if user.groups.filter(name='Group_Dealer').exists():
+        #     dealer = Dealer.objects.get(dealer=user)
+        #     queryset = queryset.filter(Q(retailer__company=dealer.company) | Q(dealer=user))
+
+        # if request.user.groups.filter(name='Group_company').exists():
+        #     company = Company.objects.get(company=request.user).company
+        #     queryset = queryset.filter(Q(retailer__company=company) | Q(dealer__company=company))
+
+        # return queryset
     
     
     
@@ -350,6 +398,27 @@ class CartItemAdmin(admin.ModelAdmin):
             queryset = queryset.filter(cart__retailer=retailer)
 
         return queryset
+    
+    
+    # def get_queryset(self, request):
+    #     queryset = super().get_queryset(request)
+    #     user = request.user
+
+    #     if user.groups.filter(name='Group_Retailer').exists():
+    #         retailer_profile = user.retailer_profile.first()
+    #         if retailer_profile:
+    #             queryset = queryset.filter(retailer=retailer_profile)
+
+    #     # if user.groups.filter(name='Group_FieldStaff').exists():
+        #     queryset = queryset.filter(retailer__company__fieldstaff__fieldstaff=user)
+
+        # if user.groups.filter(name='Group_Dealer').exists():
+        #     queryset = queryset.filter(retailer__company__dealer__dealer=user)
+
+        # if user.groups.filter(name='Group_company').exists():
+        #     queryset = queryset.filter(retailer__company__company=user)
+
+        # return queryset
     
     
     
